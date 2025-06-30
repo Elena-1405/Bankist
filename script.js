@@ -190,7 +190,34 @@ const updateUI = function (account) {
   calcDisplaySummary(account);
 };
 
-let currentAccount;
+const startLogOutTimer = function () {
+  const tick = () => {
+    const min = Math.trunc(time / 60)
+      .toString()
+      .padStart(2, 0);
+    const sec = (time % 60).toString().padStart(2, 0);
+    //print remaining time
+    labelTimer.textContent = `${min}:${sec}`;
+
+    //The timer is out, stop and log out
+    if (time === 0) {
+      clearInterval(timer);
+      labelWelcome.textContent = `Log in to get started!`;
+      containerApp.style.opacity = 0;
+    }
+    //Decrease 1s
+    time--;
+  };
+
+  //Setting the time of 5 min
+  let time = 120;
+  //Call the time every sec
+  tick();
+  const timer = setInterval(tick, 1000);
+  return timer;
+};
+
+let currentAccount, timer;
 
 //Internationalization API , ISO language table
 const now = new Date();
@@ -234,6 +261,8 @@ btnLogin.addEventListener('click', function (e) {
     //Clear the input fields
     inputLoginUsername.value = inputLoginPin.value = '';
     inputLoginPin.blur();
+    if (timer) clearInterval(timer);
+    timer = startLogOutTimer();
     updateUI(currentAccount);
   }
 });
@@ -257,6 +286,9 @@ btnTransfer.addEventListener('click', function (e) {
     currentAccount.movementsDates.push(new Date().toISOString()); //create date for a new movement
     receiverAcc.movementsDates.push(new Date().toISOString());
     updateUI(currentAccount);
+    //Reset the timer
+    clearInterval(timer);
+    timer = startLogOutTimer();
   }
 });
 
@@ -271,6 +303,8 @@ btnLoan.addEventListener('click', function (e) {
       currentAccount.movementsDates.push(new Date().toISOString());
 
       updateUI(currentAccount);
+      clearInterval(timer);
+      timer = startLogOutTimer();
     }, 5000);
   } else {
     alert('Sorry, too big amount!');
